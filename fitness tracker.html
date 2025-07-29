@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fitness Tracker</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+      transition: background 0.4s, color 0.4s;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+    }
+    .form-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    select, input {
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #444;
+      color: white;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #ccc;
+    }
+    .dark {
+      background-color: #121212;
+      color: #eee;
+    }
+    .dark input, .dark select {
+      background-color: #222;
+      color: white;
+    }
+    canvas {
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <h1>Fitness Tracker</h1>
+
+    <div class="form-group">
+      <label for="activity">Activity:</label>
+      <select id="activity">
+        <option>Running</option>
+        <option>Walking</option>
+        <option>Cycling</option>
+        <option>Swimming</option>
+        <option>Yoga</option>
+        <option>Weight Lifting</option>
+        <option>Push-ups</option>
+        <option>Sit-ups</option>
+        <option>Jump Rope</option>
+        <option>Rowing</option>
+      </select>
+
+      <input type="number" id="duration" placeholder="Duration (mins)" />
+      <button onclick="addActivity()">Add Activity</button>
+      <button onclick="toggleDarkMode()">Toggle Mode</button>
+    </div>
+
+    <h2>Activity History</h2>
+    <ul id="history"></ul>
+
+    <h2>Weekly Summary</h2>
+    <canvas id="chart" height="300"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const calorieRates = {
+      "Running": 10, "Walking": 4, "Cycling": 8, "Swimming": 9,
+      "Yoga": 3, "Weight Lifting": 6, "Push-ups": 7,
+      "Sit-ups": 6, "Jump Rope": 12, "Rowing": 8,
+    };
+
+    const activities = [];
+    const historyList = document.getElementById("history");
+    const chartCanvas = document.getElementById("chart").getContext("2d");
+
+    let chart;
+
+    function addActivity() {
+      const activity = document.getElementById("activity").value;
+      const duration = Number(document.getElementById("duration").value);
+      if (!activity || isNaN(duration) || duration <= 0) {
+        alert("Please enter valid activity and duration.");
+        return;
+      }
+      const calories = duration * (calorieRates[activity] || 5);
+      activities.push({ activity, duration, calories });
+      document.getElementById("duration").value = "";
+      renderHistory();
+      updateChart();
+    }
+
+    function renderHistory() {
+      historyList.innerHTML = "";
+      activities.forEach((a, i) => {
+        const li = document.createElement("li");
+        li.textContent = `${a.activity}: ${a.duration} mins (${a.calories} kcal)`;
+        historyList.appendChild(li);
+      });
+    }
+
+    function updateChart() {
+      const summary = {};
+      activities.forEach(a => {
+        summary[a.activity] = (summary[a.activity] || 0) + a.duration;
+      });
+      const labels = Object.keys(summary);
+      const data = Object.values(summary);
+
+      if (chart) chart.destroy();
+      chart = new Chart(chartCanvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Minutes per Activity',
+            data,
+            backgroundColor: '#00bcd4'
+          }]
+        },
+        options: {
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark");
+    }
+  </script>
+</body>
+</html>
